@@ -142,3 +142,4 @@ dmypy.json
 /.DS_Store
 /.env.dev
 /.env.prod
+/conversations.json
