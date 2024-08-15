@@ -1,0 +1,9 @@
+nonebot2[fastapi]
+nonebot-adapter-onebot
+
+black[jupyter]
+jupyter
+python-dotenv
+ujson
+openai
+pydantic

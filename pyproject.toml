@@ -1,0 +1,14 @@
+[project]
+name = "sthenno-chatbot"
+version = "0.1.0"
+description = "sthenno-chatbot"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.nonebot]
+adapters = [
+    { name = "OneBot V11", module_name = "nonebot.adapters.onebot.v11" }
+]
+plugins = []
+plugin_dirs = ["sthenno_chatbot/plugins"]
+builtin_plugins = []
