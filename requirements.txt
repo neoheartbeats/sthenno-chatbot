@@ -3,7 +3,11 @@ nonebot-adapter-onebot
 
 black[jupyter]
 jupyter
+pydantic
 python-dotenv
 ujson
+requests
+pillow
+
 openai
-pydantic
+multion

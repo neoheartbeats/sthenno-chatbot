@@ -1,5 +1,8 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as OneBotAdapter
+from nonebot import logger as lg
+
+lg.add("errors.log", level="ERROR")
 
 nonebot.init()
 

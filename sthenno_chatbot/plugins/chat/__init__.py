@@ -9,6 +9,8 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot import logger as lg
 from nonebot import CommandGroup
+
+import openai
 import os
 
 from sthenno_chatbot.utils import llm_functions as llm_fn
@@ -23,7 +25,6 @@ def superusers_p(bot: Bot, event: Event) -> bool | None:
 
 metioned = on_message(rule=to_me(), priority=10)
 
-import openai
 
 message_buffer = []
 
@@ -56,13 +57,13 @@ async def _(event: MessageEvent, bot: Bot):
         message_buffer.append(llm_fn.message_assistant(to=output_text))
 
         llm_fn.to_chat_file(
-            filename="/home/neoheartbeats/sthenno-chatbot/conversations.json",
+            filename="/Users/sthenno/Developer/sthenno-chatbot/conversations.json",
             dt=message_buffer[-2:],
         )
 
         lg.info(f"conversation: {message_buffer[-2:]} sotred in conversations.json")
 
-        # If there's empty lines, separate the message into multiple chunks, and send them separately
+        # If there are empty lines, separate the message into multiple segments, then send them separately
         output_text = output_text.strip()
         output_text = output_text.split("\n\n")
 
@@ -74,13 +75,13 @@ async def _(event: MessageEvent, bot: Bot):
                 sleep(1.5)
 
 
-command_group = CommandGroup("sn", prefix_aliases=True)
+# command_group = CommandGroup("sn", prefix_aliases=True)
 
-zeros = command_group.command("zeros", aliases={"0"}, priority=5)
+zeros = on_command("zeros", aliases={"0"}, priority=5)
 
 
 @zeros.handle()
 async def _(event: Event):
     global message_buffer
     message_buffer = []
-    await zeros.finish("Message buffer is cleaned up.")
+    await zeros.finish(Message("Message buffer is cleaned up."))
