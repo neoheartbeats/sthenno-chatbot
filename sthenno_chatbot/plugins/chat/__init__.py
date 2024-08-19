@@ -5,6 +5,7 @@ from nonebot.adapters.onebot.v11 import (
     Bot,
     Event,
     Message,
+    MessageSegment,
     MessageEvent,
 )
 from nonebot import logger as lg
@@ -40,14 +41,10 @@ async def _(event: MessageEvent, bot: Bot):
 
     lg.debug(f"input_text: {input_text}")
 
-    try:
-        output_text = llm_fn.push_chat_message(
-            messages=message_buffer[-10:], input_text=input_text
-        )
-    except Exception as e:
-        if isinstance(e, openai.BadRequestError):
-            message_buffer = []
-            output_text = llm_fn.push_chat_message(messages=[], input_text=input_text)
+    output_text = llm_fn.push_chat_message(
+        messages=message_buffer[-10:],
+        input_text=input_text,
+    )
 
     if output_text:
         output_text = output_text.strip()
@@ -84,4 +81,4 @@ zeros = on_command("zeros", aliases={"0"}, priority=5)
 async def _(event: Event):
     global message_buffer
     message_buffer = []
-    await zeros.finish(Message("Message buffer is cleaned up."))
+    await zeros.send(Message("Message buffer is cleaned up."))
