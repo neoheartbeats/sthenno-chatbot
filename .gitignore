@@ -144,3 +144,4 @@ dmypy.json
 /.env.prod
 /conversations.json
 /kto_01.json
+/kto_02.json

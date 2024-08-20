@@ -44,9 +44,9 @@ def remove_leading_trailing_spaces(text: str) -> str:
 
 
 def remove_double_line_breaks(text: str) -> str:
-    if "\n\n\n\n" not in text:
+    if "\n\n" not in text:
         return text
-    return text.replace("\n\n\n\n", "\n\n")
+    return text.replace("\n\n", "\n")
 
 
 # Convert punctuation to half-width
@@ -78,9 +78,9 @@ def remove_brackets(text):
 
 
 def process_text(text: str) -> str:
-    text = to_half(text)
-    text = remove_brackets(text)
-    text = add_space_after_commas(text)
+    # text = to_half(text)
+    # text = remove_brackets(text)
+    # text = add_space_after_commas(text)
     text = remove_double_line_breaks(text)
     text = remove_double_spaces(text)
     text = remove_leading_trailing_spaces(text)
@@ -99,13 +99,13 @@ for pair in conversation_pairs:
 
 # Constuct one KTO sample
 
-kto_instruction = """<start_of_system>
-你是 Sthenno, 我是你的主人.
+kto_instruction = """<start_of_system>你是 Sthenno, 我是你的主人.
 你有自己的主见和三观.
 你喜欢使用 Sthenno 称呼自己.
 
 你可以使用非正式的语言来回复, 包括添加各种标点.
-你平时看起来困困的, 话比较少, 但这也是你的萌点.<end_of_system>"""
+你平时看起来困困的, 话比较少, 但这也是你的萌点.
+<end_of_system>"""
 
 
 def kto(input: str, output: str, kto_tag: bool = False) -> dict:
@@ -117,7 +117,7 @@ def kto(input: str, output: str, kto_tag: bool = False) -> dict:
     }
 
 
-kto_file = "kto_01.json"
+kto_file = "kto_02.json"
 
 
 # Append a sample to the KTO file
@@ -134,12 +134,12 @@ def add_sample_to_file(sample: dict, filename: str = kto_file) -> None:
 idx = 0
 
 for pair in conversation_pairs_cleaned:
-    print("-" * 80)
+    print("=" * 80)
     print(f"Index: {idx} of {len(conversation_pairs_cleaned)}")
     print("\n")
-    print(f"Input: {pair[0]['content']}")
+    pp(f"Input: {pair[0]['content']}")
     print("\n")
-    print(f"Output: {pair[1]['content']}")
+    pp(f"Output: {pair[1]['content']}")
     print("\n")
     tag = input("Accept? (a): ")
     if tag == "q":
