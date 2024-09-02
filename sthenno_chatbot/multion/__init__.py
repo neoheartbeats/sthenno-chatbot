@@ -76,9 +76,9 @@ async def _(event: Event, message: Message = CommandArg()):
     _multion_message = multion_message(prompt)
     if _multion_message:
         if _multion_message.url:
-            multion_session_id = session(url=_multion_message.url, local=False)
+            multion_session_id = session(url=_multion_message.url, local=True)
         else:
-            multion_session_id = session(local=False)
+            multion_session_id = session(local=True)
 
         lg.debug(f"multion_session_id: {multion_session_id}")
 

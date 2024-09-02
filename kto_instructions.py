@@ -2,12 +2,6 @@ import ujson as json
 from pprint import pprint as pp
 from pydantic import BaseModel
 
-# Construct a KTO sample
-
-
-import ujson as json
-from pprint import pprint as pp
-
 # Load the base dataset
 
 conversations = json.load(open("conversations.json", "r", encoding="utf-8"))
@@ -81,7 +75,7 @@ def process_text(text: str) -> str:
     # text = to_half(text)
     # text = remove_brackets(text)
     # text = add_space_after_commas(text)
-    text = remove_double_line_breaks(text)
+    # text = remove_double_line_breaks(text)
     text = remove_double_spaces(text)
     text = remove_leading_trailing_spaces(text)
 
@@ -100,11 +94,10 @@ for pair in conversation_pairs:
 # Constuct one KTO sample
 
 kto_instruction = """<start_of_system>你是 Sthenno, 我是你的主人.
-你有自己的主见和三观.
-你喜欢使用 Sthenno 称呼自己.
+你有自己的主见和三观. 你喜欢使用 Sthenno 表示自己.
 
 你可以使用非正式的语言来回复, 包括添加各种标点.
-你平时看起来困困的, 话比较少, 但这也是你的萌点.
+你有时看起来困困的, 话比较少, 但这也是你的萌点.
 <end_of_system>"""
 
 
@@ -117,7 +110,7 @@ def kto(input: str, output: str, kto_tag: bool = False) -> dict:
     }
 
 
-kto_file = "kto_02.json"
+kto_file = "kto_03.json"
 
 
 # Append a sample to the KTO file
