@@ -1,10 +1,14 @@
 import ujson as json
 from pprint import pprint as pp
+from rich import print
 from pydantic import BaseModel
 
 # Load the base dataset
 
 conversations = json.load(open("conversations.json", "r", encoding="utf-8"))
+
+# Reverse the order of the conversations
+conversations = conversations[::-1]
 
 conversation_pairs: list[list[dict]] = []
 
@@ -13,7 +17,7 @@ for i in range(len(conversations)):
     if i % 2 == 0:
         pair.append(conversations[i])
         pair.append(conversations[i + 1])
-        conversation_pairs.append(pair)
+        conversation_pairs.append(pair[::-1])
     i += 2
 
 # Data cleaning
@@ -71,14 +75,34 @@ def remove_brackets(text):
     return re.sub(r"\(.*?\)", "", text).strip()
 
 
+# def process_text(text: str) -> str:
+#     text = to_half(text)
+#     text = remove_brackets(text)
+#     text = add_space_after_commas(text)
+#     text = remove_double_spaces(text)
+#     text = remove_leading_trailing_spaces(text)
+
+#     return text
+
+
 def process_text(text: str) -> str:
-    # text = to_half(text)
-    # text = remove_brackets(text)
-    # text = add_space_after_commas(text)
-    # text = remove_double_line_breaks(text)
+    # text = re.sub(r"\s+", " ", text).strip()
+    # text = re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])", "", text)
+
+    def fullwidth_to_halfwidth(char):
+        code = ord(char)
+        if 0xFF01 <= code <= 0xFF5E:
+            return chr(code - 0xFEE0)
+        elif code == 0x3000:
+            return " "
+        return char
+
+    text = "".join(fullwidth_to_halfwidth(char) for char in text)
+    text = re.sub(r"\(.*?\)|\[.*?\]|（.*?）|【.*?】", "", text)
+    text = re.sub(r"\*.*?\*", "", text)
+    text = add_space_after_commas(text)
     text = remove_double_spaces(text)
     text = remove_leading_trailing_spaces(text)
-
     return text
 
 
@@ -93,12 +117,14 @@ for pair in conversation_pairs:
 
 # Constuct one KTO sample
 
-kto_instruction = """<start_of_system>你是 Sthenno, 我是你的主人.
-你有自己的主见和三观. 你喜欢使用 Sthenno 表示自己.
+# kto_instruction = """<start_of_system>你是 Sthenno, 我是你的主人.
+# 你有自己的主见和三观. 你喜欢使用 Sthenno 表示自己.
 
-你可以使用非正式的语言来回复, 包括添加各种标点.
-你有时看起来困困的, 话比较少, 但这也是你的萌点.
-<end_of_system>"""
+# 你可以使用非正式的语言来回复, 包括添加各种标点.
+# 你有时看起来困困的, 话比较少, 但这也是你的萌点.
+# <end_of_system>"""
+
+kto_instruction = """<start_of_system>你是 Sthenno, 我是你的主人.\n你有自己的主见和三观. 你喜欢使用 Sthenno 表示自己.\n<end_of_system>"""
 
 
 def kto(input: str, output: str, kto_tag: bool = False) -> dict:
@@ -110,7 +136,7 @@ def kto(input: str, output: str, kto_tag: bool = False) -> dict:
     }
 
 
-kto_file = "kto_03.json"
+kto_file = "kto_08.json"
 
 
 # Append a sample to the KTO file
@@ -130,18 +156,18 @@ for pair in conversation_pairs_cleaned:
     print("=" * 80)
     print(f"Index: {idx} of {len(conversation_pairs_cleaned)}")
     print("\n")
-    pp(f"Input: {pair[0]['content']}")
+    print(f"Input: {pair[0]['content']}")
     print("\n")
-    pp(f"Output: {pair[1]['content']}")
+    print(f"Output: {pair[1]['content']}")
     print("\n")
     tag = input("Accept? (a): ")
     if tag == "q":
-        pp(f"Index: {idx}")
-        break
+        add_sample_to_file(kto(pair[0]["content"], pair[1]["content"], kto_tag=False))
+        idx += 1
     if tag == "a":
         add_sample_to_file(kto(pair[0]["content"], pair[1]["content"], kto_tag=True))
         idx += 1
     else:
-        add_sample_to_file(kto(pair[0]["content"], pair[1]["content"], kto_tag=False))
         idx += 1
+        continue
     print("\n\n")

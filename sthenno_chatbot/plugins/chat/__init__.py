@@ -24,16 +24,16 @@ system_prompt = """You are Sthenno. You are designed to repreduce emotional resp
 I am your instructor. 你叫我为主人.
 """
 
-conversations = json.load(
-    open(
-        "/Users/sthenno/Developer/sthenno-chatbot/conversations.json",
-        "r",
-        encoding="utf-8",
-    )
-)
+# conversations = json.load(
+#     open(
+#         "/Users/sthenno/Developer/sthenno-chatbot/conversations.json",
+#         "r",
+#         encoding="utf-8",
+#     )
+# )
 
 message_pair_index = 0
-message_buffer = conversations[-4:]
+message_buffer = []  # conversations[-4:]
 
 
 def simpo(input: str, chosen: str, rejected: str, index: int = 0) -> dict:
@@ -58,7 +58,7 @@ def kto(input: str, output: str, kto_tag: bool = False, index: int = 0) -> dict:
 
 open_client = OpenAI()
 
-open_model = "ft:gpt-4o-2024-08-06:personal:sft-001:A2bUvxNJ"
+open_model = "ft:gpt-4o-2024-08-06:personal:sft-001:A2bUuCGQ:ckpt-step-484"
 
 
 def open_gen(messsages, input_text):
@@ -82,7 +82,7 @@ async def _(event: MessageEvent, bot: Bot):
     input_text = event.get_message().extract_plain_text()
 
     if input_text[0] == "." and input_text != ".k":  # Ignore commands
-        await metioned.finish()
+        return
 
     lg.info(f"input_text: {input_text}")
 
@@ -121,7 +121,7 @@ async def _(event: MessageEvent, bot: Bot):
         )
 
     output_text = llm_fn.push_chat_message(
-        messages=message_buffer[-16:],
+        messages=message_buffer,
         input_text=input_text,
     )
 
@@ -166,8 +166,8 @@ zeros = on_command("zeros", aliases={"0"}, priority=5)
 
 @zeros.handle()
 async def _(event: Event):
-    if int(event.get_user_id()) != 1829321520:
-        return
+    # if int(event.get_user_id()) != 1829321520:
+    #     return
     global message_buffer, message_pair_index
     message_buffer = []
     message_pair_index = 0
@@ -181,7 +181,7 @@ msg_len = on_command("msg_len", aliases={"ml"}, priority=5)
 async def _(event: Event):
     global message_buffer, message_pair_index
     await msg_len.finish(
-        Message(f"Message buffer length: {len(message_buffer)} of 16.")
+        Message(f"Message buffer length: {len(message_buffer)} of 24.")
     )
 
 
@@ -189,19 +189,17 @@ simpo_sampling = on_command("simpo", aliases={"s"}, priority=5)
 
 
 @simpo_sampling.handle()
-async def _(matcher: Matcher, event: Event, args: Message = CommandArg()):
-    if int(event.get_user_id()) != 1829321520:
-        return
-    if args.extract_plain_text() is not None:
+async def _(matcher: Matcher, args: Message = CommandArg()):
+    if args.extract_plain_text():
         matcher.set_arg("optimized_output", args)
 
 
-@simpo_sampling.got("optimized_output")
-async def _(state: T_State, event: Event, optimized_output: str = ArgPlainText()):
+@simpo_sampling.got(
+    "optimized_output",
+    prompt=Message("[SimPO sampling](.q .g plain_text)"),
+)
+async def _(state: T_State, optimized_output: str = ArgPlainText()):
     global message_buffer, message_pair_index
-
-    if int(event.get_user_id()) != 1829321520:
-        return
 
     # Align KTO samples to the same as SimPO samples. Note KTO samples are just removed from the dataset.
     kto_samples = json.load(
@@ -217,18 +215,6 @@ async def _(state: T_State, event: Event, optimized_output: str = ArgPlainText()
         dt=kto_samples,
     )
 
-    await simpo_sampling.send(
-        Message(
-            f"""[sampling] Refactoring sample:
-            
-    Input: {message_buffer[-2]['content']}
-            
-    Output: {message_buffer[-1]['content']}
-            
-To (.q .g):"""
-        )
-    )
-
     if optimized_output == ".q":
         await simpo_sampling.finish(
             Message(f"[sampling] Refactoring message canceled.")
@@ -236,20 +222,18 @@ To (.q .g):"""
 
     if optimized_output == ".g":
         gpt_output = open_gen(
-            messsages=message_buffer[-15:],
+            messsages=message_buffer[-17:],
             input_text=message_buffer[-2]["content"],
         )
         if gpt_output:
+            state["gpt_output"] = gpt_output
             await simpo_sampling.send(
                 Message(
                     f"[sampling] Optimized output by GPT-4o:\n\n{gpt_output}\n\nAccept (.y .n)? "
                 )
             )
-            state["gpt_output"] = gpt_output
             return
-
-    if optimized_output[0] != "." and optimized_output != ".s":
-
+    if optimized_output:
         simpo_sample = simpo(
             input=message_buffer[-2]["content"],
             chosen=optimized_output,
@@ -272,7 +256,7 @@ To (.q .g):"""
 async def _(state: T_State, accept: str = ArgPlainText()):
     global message_buffer, message_pair_index
 
-    if state["gpt_output"]:
+    if accept and state.get("gpt_output"):
         if accept == ".y":
             sample = simpo(
                 input=message_buffer[-2]["content"],
@@ -293,3 +277,4 @@ async def _(state: T_State, accept: str = ArgPlainText()):
             )
         else:
             await simpo_sampling.finish(Message(f"[sampling] Aborted."))
+    return
